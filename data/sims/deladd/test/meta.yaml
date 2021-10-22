@@ -1,0 +1,29 @@
+data-params:
+  keep-hidden: false
+  maxval: 1.0
+  minval: 0.0
+  naddends: 2
+  seqlen: 50
+  test-noise: 0.0
+  test-size: 10000
+  train-noise: 0.0
+  train-size: 1000
+  val-split: 0.2
+info:
+  test-score: 0.493774755859375
+  timestamp: 2019-11-20 10:18:14.533632
+  training-time: 25.637231630000315
+learning-params:
+  batch_size: 50
+  criterion: mse
+  l2-norm: 0
+  learning-rate: 0.0001
+  optimizer: adam
+model-params:
+  dropout: 0.0
+  hidden_size: 50
+  input_size: 2
+  model_type: LSTM
+  n_layers: 1
+  output_size: 1
+seed: 1001

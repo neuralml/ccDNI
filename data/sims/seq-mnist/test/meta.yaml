@@ -1,0 +1,25 @@
+data-params:
+  keep-hidden: false
+  val-split: 0.2
+info:
+  test-accuracy: 0.2656
+  test-log-likelihood: 2.1478370881080626
+  timestamp: 2021-10-22 11:58:12.089231
+  training-time: 23.389806234999924
+learning-params:
+  batch_size: 50
+  bptt: 3
+  criterion: mse
+  l2-norm: 0
+  learning-rate: 0.0001
+  optimizer: adam
+model-params:
+  dropout: 0.0
+  hidden_size: 50
+  input_size: 28
+  model_type: DNI_LSTM
+  n_layers: 1
+  nfibres: null
+  synth_nhid: null
+  synth_nlayers: 1
+seed: 521
