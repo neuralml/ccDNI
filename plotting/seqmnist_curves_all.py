@@ -17,7 +17,7 @@ colours = [(0.5,0.5,0.5),(249/256, 170/256, 56/256), 'r']
 
 full_bptt_fn = "{}_sparsintnew-4_LSTM_nseeds-3_nhid-30_synthnhid-0_Inpsize-28_T-28_.npy"
 
-root = '/home/joe/Documents/dni/code/BP/seq-mnist-drawing/opt_each_batch/'
+root = 'results_dir' #directory where results are stored. Should contain separate 'fixedmag' (linedraw) and 'digits' folders.
 
 tasks = ['fixedmag', 'digits']
 
