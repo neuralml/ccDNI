@@ -1,6 +1,6 @@
 # cortico-cerebellar DNI
 
-Code used in 'Cortico-cerebellar networks as decoupling neural interfaces', neurIPS 2021.
+Code used in 'Cortico-cerebellar networks as decoupling neural interfaces', NeurIPS 2021.
 
 To run linedraw + seqMNIST based tasks, go in /scripts.
 To run image captioning, go into /other/image-captioning.
