@@ -11,7 +11,6 @@ import sys
 import argparse
 import datetime
 import yaml
-import code
 import time
 
 
@@ -26,9 +25,7 @@ from os.path import isfile, join
 import math
 
 
-##Set path
-
-src_path = '/Users/ellenboven/OneDrive - University of Bristol/Documents/PhD/Cerebellearning/Computational/Code/DNI_git/milton-experiment-jop/src' #'src_path' #path to src directory
+src_path = 'src_path' #path to src directory
 sys.path.insert(0, src_path)
 
 
@@ -47,7 +44,7 @@ import torchvision.transforms as trans
 
 def train_model(
         # Model parameters
-        model='subLSTM', nlayers=1, nhid=50, dropout=0,
+        model='LSTM', nlayers=1, nhid=50, dropout=0,
         # Data paramters
         seqlen=50, naddends=2, minval=0, maxval=1, train_noise=0.1, test_noise=0.0,
         training_size=10000, testing_size=1000, val_split=0.2, fixdata=False, input_D=1, npoints=1, targetD=2,
@@ -56,11 +53,10 @@ def train_model(
         clip=1.0, early_stopping=False, decay_lr=False, lr_scale=0.1,
         lr_decay_patience=10, keep_hidden=False,
         # Replicability and storage
-        save='..\\..\\data/sims\\deladd\\test', seed=18092, no_cuda=False, bias = None,
-        verbose=False, log_interval=10, bptt=None, nseeds=1, 
-        record_grads=False, spars_int = None, synth_nlayers=0, synth_nhid=0, nfibres = 0, 
-        ablation_epoch=None, opt_each_trunc=False, synth_ablation_epoch=None, sgfactor = 0, 
-        pred_last = True
+        save='../../data/sims/linedraw/test', seed=18092, no_cuda=False, 
+        verbose=False, log_interval=10, bptt=None, nseeds=1, bias=None, 
+        record_grads=False, spars_int = None, synth_nlayers=0, synth_nhid=0, nfibres=0, 
+        ablation_epoch=None, synth_ablation_epoch=None, 
 ):
     # Set training seed and get device
     device = set_seed_and_device(seed, no_cuda)
@@ -74,8 +70,8 @@ def train_model(
         train_val_split=val_split,
         seq_len=seqlen,
         num_addends=naddends,
-        min_addend=minval,
-        max_addend=maxval,
+        minval=minval,
+        maxval=maxval,
         train_noise_var=train_noise,
         test_noise_var=test_noise,
         fixdata=fixdata, 
@@ -99,13 +95,22 @@ def train_model(
         device=device,
         dropout=dropout,
         synth_nlayers=synth_nlayers,
-        synth_nhid=synth_nhid, 
-        ablation_epoch=ablation_epoch,
-        opt_each_trunc=opt_each_trunc, 
-        sgfactor = sgfactor, 
-        pred_last = pred_last
+        synth_nhid=synth_nhid,
+        predict_last=False
     )
     
+    #bias for RNN intialisation (not modeled in neurips2021)
+    if bias is not None:
+        with torch.no_grad():
+            if model_type in ['DNI_LSTM', 'DNI_TANH', 'cDNI_LSTM', 'cDNI_TANH']:
+                model.rnn.rnn.weight_hh_l0[:] = model.rnn.rnn.weight_hh_l0[:] * bias
+                model.rnn.rnn.weight_ih_l0[:] = model.rnn.rnn.weight_ih_l0[:] * bias
+                           
+                model.rnn.rnn.bias_hh_l0[:] = model.rnn.rnn.bias_hh_l0[:]*bias
+                model.rnn.rnn.bias_ih_l0[:] = model.rnn.rnn.bias_ih_l0[:]*bias            
+            else:
+                model.rnn.weight_hh_l0[:] = model.rnn.weight_hh_l0[:] * bias
+                model.rnn.weight_ih_l0[:] = model.rnn.weight_ih_l0[:] * bias
 
     #sparsify input 'mossy fibre' synthesiser weights if desired (not modeled in neurips2021)
     if model_type in ['LSTM', 'TANH']:
@@ -136,9 +141,8 @@ def train_model(
     setup = setup_training(
         model, validation_data, optim, ['mse'], lr, l2_norm,
         rate_reg, clip, early_stopping, decay_lr, lr_scale, lr_decay_patience,
-        keep_hidden, save, device, True, True, bptt, batch_size, record_grads, spars_int=spars_int, pred_last=pred_last, 
-        l1_reg=None, mask=mask, ablation_epoch=ablation_epoch, opt_each_trunc=opt_each_trunc,
-        sgfactor = sgfactor
+        keep_hidden, save, device, True, True, bptt, batch_size, False, record_grads, 
+        spars_int=spars_int, mask=mask, 
     )
 
     trainer, validator, checkpoint, metrics = setup[:4]
@@ -219,8 +223,8 @@ def train_model(
     
 
 
-    #with open(save + '\\meta.yaml', mode='w') as f:
-     #   yaml.dump(meta, f)
+    with open(save + '\\meta.yaml', mode='w') as f:
+        yaml.dump(meta, f)
 
     print('Done.')
 
@@ -249,12 +253,11 @@ if __name__ == "__main__":
 
     # Model parameters
     parser.add_argument('--model', type=str, default='LSTM',
-                        help='RNN model tu use. One of:'
-                             'subLSTM|fix-subLSTM|LSTM|GRU'
-                             '|TANH|DNI_TANH|DNI_LSTM')  # JOP
+                        help='RNN model to use. One of:'
+                        '|TANH|DNI_TANH|LSTM|DNI_LSTM')  # JOP
     parser.add_argument('--nlayers', type=int, default=1,
                         help='number of layers')
-    parser.add_argument('--nhid', type=int, default=10,
+    parser.add_argument('--nhid', type=int, default=50,
                         help='number of hidden units per layer')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='the drop rate for each layer of the network')
@@ -285,14 +288,14 @@ if __name__ == "__main__":
     # Training parameters
     parser.add_argument('--epochs', type=int, default=100,
                         help='max number of training epochs')
-    parser.add_argument('--batch-size', type=int, default=20, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                         help='size of each batch. keep in mind that if the '
                              'training size modulo this quantity is not zero, then'
                              'the it will be increased to create a full batch.')
     parser.add_argument('--optim', type=str, default='adam',
                         help='gradient descent method, supports on of:'
                              'adam|sparseadam|adamax|rmsprop|sgd|adagrad|adadelta')
-    parser.add_argument('--lr', type=float, default=1e-4,
+    parser.add_argument('--lr', type=float, default=0.001,
                         help='initial learning rate')
     parser.add_argument('--l2-norm', type=float, default=0,
                         help='weight of L2 norm')
@@ -334,8 +337,6 @@ if __name__ == "__main__":
                         help='print the progress of training to std output.')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='report interval')
-    parser.add_argument('--opt_each_trunc', action='store_true',
-                        help='optimize each truncation')
 
     # JOP
     parser.add_argument('--bptt', type=int, metavar='N',
@@ -344,86 +345,49 @@ if __name__ == "__main__":
                         help='Number of non-zero weights from hidden to synthesiser (like mossy fibres)')
     parser.add_argument('--record-grads', action='store_true',
                         help='Record hidden activity and corresponding true/synthetic gradients')
-    parser.add_argument('--synth-nlayers', type=int, default=2,
+    parser.add_argument('--synth-nlayers', type=int, default=1,
                         help='Number of hidden layers for synthesiser')
-    parser.add_argument('--synth-nhid', type=int, metavar='N',
+    parser.add_argument('--synth-nhid', type=int, default=400, metavar='N',
                         help='Number of hidden units in synthesiser')
     parser.add_argument('--input-D', type=int, default=1,
                     help='input dimension') 
     parser.add_argument('--targetD', type=int, default=2,
                     help='target dimension') # for now coded that target dimennsion = input_D 
-    parser.add_argument('--npoints', type=int, default=1,
+    parser.add_argument('--npoints', type=int, default=7,
                     help='npoints') 
  
     parser.add_argument('--bias', type=float, default=None,
                     help='Bias')   
-    parser.add_argument('--sgfactor', type=float, default=0.1,
-                help='synthetic gradient factor')  
-    parser.add_argument('--pred_last', action = 'store_true',
-                help='only target in the end') 
-    parser.add_argument('--ablation_epoch', type=int, default=-1, metavar='N',
-                        help='time where ablation')
     parser.add_argument('--spars_int', type=int, default=None,
                     help='sparse int')
-    parser.add_argument('--synth_ablation_epoch', type=float, default=None,
-                    help='synthesizer_ablation_epoch') 
+    parser.add_argument('--ablation_epoch', type=int, default=-1, metavar='N',
+                        help='when to ablate the synthesiser..')
+    parser.add_argument('--synth_ablation_epoch', type=int, default=-1, metavar='N',
+                        help='when to ablate the synthesiser learning (IO)..')
 
     args = parser.parse_args()
     
     args.model = 'DNI_LSTM'
  
-    args.batch_size = 50
-    args.seqlen = 10 #seq length 28
     args.record_grads = True
-    args.lr_scale =0.1
-    args.lr_decay_patience = 10
-    args.input_D = 1 
-    args.ablation_epoch = None
-    args.epochs = 5
-    args.targetD =2 
-    args.nhid = 50
-    args.lr = 0.001
-    args.synth_nlayers = 1
-    args.pred_last = False
-
-
+    args.epochs = 1
     
+    # as in paper
+    args.nhid = 50
+    args.synth_nhid = 400   
     args.spars_int = 2
-    args.synth_nhid  = args.nhid*2*4
     args.npoints=7
-    args.nseeds = 1
     args.bptt =1
     
     assert args.record_grads, "You're in the record grads file with record_grads as false. Switch it one!"
    
-    
-
-
+    # for 7 points inputs range from (-3, 3)
     args.minval=-math.floor(args.npoints/2)
     args.maxval = math.floor(args.npoints/2)
     if len(np.arange(args.minval, args.maxval+1)) > args.npoints:
         args.minval = args.minval+1 
-    print(args.npoints)
-    print(args.minval)
-    print(args.maxval)
-    print(np.arange(args.minval, args.maxval+1))
             
         
-            
-    args.bias = None
-
-    mean_all=np.zeros((2, args.epochs))
-    mean_all_seeds = np.zeros(( args.nseeds, 2, args.epochs))
-
-    sd_all=np.zeros((2, args.epochs))
-    
-    pred_all = np.zeros((args.nseeds, int(args.npoints), args.seqlen, args.targetD)) # l, t, seed,j 
-
-    pred_mean_all = np.zeros((int(args.npoints), args.seqlen, args.targetD)) # l, t, seed,j 
-    pred_sd_all = np.zeros((int(args.npoints), args.seqlen, args.targetD)) # l, t, seed,j 
-    
-    mean_weights_all = []
-    sd_weights_all = []
     
     time_x = time.time()
     
@@ -528,6 +492,8 @@ if __name__ == "__main__":
                     savedir = os.path.join(root, savedir) + "/"
                     if not os.path.exists(savedir): 
                         os.makedirs(savedir)
+                        
+                    """
                     np.save(savedir + 'hidds.npy', hidds.detach().numpy())
                     np.save(savedir + 'sgrads.npy', sgrads.detach().numpy())
                     np.save(savedir + 'truegrads_output.npy', truegrads_output.detach().numpy())
@@ -540,6 +506,6 @@ if __name__ == "__main__":
 
                     np.save(savedir + 'biases.npy', np.array(biases))
                     np.save(savedir + 'seeds.npy', np.array(seeds))
-
+                    """
                        
     print("All finished and results saved in", root)

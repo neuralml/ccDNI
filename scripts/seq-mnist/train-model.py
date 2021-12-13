@@ -73,7 +73,8 @@ def train_model(
         device=device,
         dropout=dropout,
         synth_nlayers=synth_nlayers, 
-        synth_nhid=synth_nhid
+        synth_nhid=synth_nhid,
+        predict_last=True
     )
 
     model.ablation_epoch = ablation_epoch
@@ -228,12 +229,11 @@ if __name__ == "__main__":
 
     # Model parameters
     parser.add_argument('--model', type=str, default='LSTM',
-                        help='RNN model tu use. One of:'
-                        'subLSTM|fix-subLSTM|LSTM|GRU'
-                        '|TANH|DNI_TANH|DNI_LSTM') #JOP
+                        help='RNN model to use. One of:'
+                        '|TANH|DNI_TANH|LSTM|DNI_LSTM') 
     parser.add_argument('--nlayers', type=int, default=1,
                         help='number of layers')
-    parser.add_argument('--nhid', type=int, default=50,
+    parser.add_argument('--nhid', type=int, default=30,
                         help='number of hidden units per layer')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='the drop rate for each layer of the network')
@@ -314,9 +314,9 @@ if __name__ == "__main__":
     parser.add_argument('--nfibres', type=int, metavar='N',
                         help='Number of non-zero weights from model hidden to synthesiser')
     parser.add_argument('--ablation_epoch', type=int, default=-1, metavar='N',
-                        help='when to ablate the synthesiser..')
+                        help='when to ablate the synthesiser')
     parser.add_argument('--synth_ablation_epoch', type=int, default=-1, metavar='N',
-                        help='when to ablate the synthesise IO..')
+                        help='when to ablate the synthesiser learning (IO)')
     parser.add_argument('--record_certainty', action='store_true', 
                         help='record the average model confidence at each epoch')
     parser.add_argument('--fixed-synth', action='store_true', 
@@ -366,7 +366,7 @@ if __name__ == "__main__":
                 all_scores[i, j, 3,:] = val_cert
 
 
-    root = '/home/oq19042/dni/seq-mnist/results/opt_each_batch/' 
+    root = 'savepath' #where to save results 
     vecname = str(args.model) + "_nseeds-" + str(args.nseeds) + "_nhid-" + str(args.nhid) + "_synthnhid-" + str(args.synth_nhid) + "_Inpsize-" + str(args.input_size) + "_T-" + str(args.bptt) + "_.npy"
 
     if args.ablation_epoch != -1:

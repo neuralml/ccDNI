@@ -67,7 +67,8 @@ def train_model(
         device=device,
         dropout=dropout,
         synth_nlayers=synth_nlayers, 
-        synth_nhid=synth_nhid
+        synth_nhid=synth_nhid,
+        predict_last=True
     )
     model.ablation_epoch = -1  
  
@@ -228,11 +229,10 @@ if __name__ == "__main__":
     # Model parameters
     parser.add_argument('--model', type=str, default='LSTM',
                         help='RNN model tu use. One of:'
-                        'subLSTM|fix-subLSTM|LSTM|GRU'
-                        '|TANH|DNI_TANH|DNI_LSTM') #JOP
+                        '|TANH|DNI_TANH|LSTM|DNI_LSTM') #JOP
     parser.add_argument('--nlayers', type=int, default=1,
                         help='number of layers')
-    parser.add_argument('--nhid', type=int, default=50,
+    parser.add_argument('--nhid', type=int, default=30,
                         help='number of hidden units per layer')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='the drop rate for each layer of the network')

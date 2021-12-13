@@ -3,6 +3,9 @@
 '''
 sequential mnist with a drawing task. Given an input sequence of MNIST pixels,
 predict (x_t, y_t) coordinates for drawing
+
+for line-drawing, set fixed_mag=True
+for digit-drawing, set draw-digits=True
 '''
 
 import sys
@@ -19,7 +22,6 @@ from ignite.metrics import Loss, Accuracy
 import glob
 
 src_path = 'src_path' #path to src directory
-src_path = '/home/joe/Documents/submissions/2021/neurips_2021/code/dni_neurips/src/'
 sys.path.insert(0, src_path)
 
 from dataset.mnist import load_mnist, draw_2dlines, draw_2ddigits
@@ -249,11 +251,10 @@ if __name__ == "__main__":
     # Model parameters
     parser.add_argument('--model', type=str, default='LSTM',
                         help='RNN model tu use. One of:'
-                        'subLSTM|fix-subLSTM|LSTM|GRU'
-                        '|TANH|DNI_TANH|DNI_LSTM') #JOP
+                        '|TANH|DNI_TANH|LSTM|DNI_LSTM') #JOP
     parser.add_argument('--nlayers', type=int, default=1,
                         help='number of layers')
-    parser.add_argument('--nhid', type=int, default=50,
+    parser.add_argument('--nhid', type=int, default=30,
                         help='number of hidden units per layer')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='the drop rate for each layer of the network')
@@ -344,9 +345,9 @@ if __name__ == "__main__":
     parser.add_argument('--nfibres', type=int, metavar='N',
                         help='Number of non-zero weights from hidden to synthesiser (like mossy fibres)') 
     parser.add_argument('--ablation_epoch', type=int, default=-1, metavar='N',
-                        help='time where ablation')
+                        help='when to ablate the synthesiser')
     parser.add_argument('--synth_ablation_epoch', type=int, default=-1, metavar='N',
-                        help='time where ablation')  
+                        help='when to ablate the synthesiser learning (IO)')
     parser.add_argument('--fixed-synth', action='store_true',
                         help='random fixed weights for synthesiser') 
 
@@ -391,7 +392,7 @@ if __name__ == "__main__":
             all_scores[i, j, 0,:] = train_mse
             all_scores[i, j, 1,:] = val_mse
   
-    root = '/home/oq19042/dni/seq-mnist-drawing/results/opt_each_batch/' 
+    root = 'savepath' #where to save results 
     vecname = str(args.model) + "_nseeds-" + str(args.nseeds) + "_nhid-" + str(args.nhid) + "_synthnhid-" + str(args.synth_nhid) + "_Inpsize-" + str(args.input_size) + "_T-" + str(args.bptt) + "_.npy"
     if args.ablation_epoch != -1:
         suff = "_ablation_{}_.npy".format(args.ablation_epoch)
@@ -402,7 +403,7 @@ if __name__ == "__main__":
         vecname = vecname.replace('_.npy', suff)
 
     if args.spars_int is not None:
-        vecname = "sparsintnew-" + str(args.spars_int) + "_" + vecname    
+        vecname = "sparsint-" + str(args.spars_int) + "_" + vecname    
     if args.draw_digits:
         root = os.path.join(root, 'digits/')
         vecname = "digits_" + vecname

@@ -5,24 +5,16 @@ Created on Mon Oct 25 11:54:16 2021
 
 @author: ellenboven
 """
-
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-import code
 
-def draw_2dlines(nlines, seq_len, fixedmag=True):
+def draw_2dlines(nlines, seq_len):
     X = np.zeros((nlines, seq_len, 2))
     
-    
-    if fixedmag:
-        end_points = get_circle_points(nlines)
-    else:
-        end_points = get_2dpoints(nlines) #n unique end points for the line
-        end_points = end_points * 10
+    end_points = get_circle_points(nlines)
     
     for i in range(nlines):
-        #end_point = torch.rand(2)
         line = draw_2dline(seq_len, end_points[i])
         X[i] = line
     
@@ -42,10 +34,8 @@ def get_circle_points(npoints, mag=10):
 def draw_2dline(seq_len, end_point, start_point = None):
     #pick a random start point and end point on the square, 
     #and make sequence of points between them
-    #start_point = np.random.rand(2)
     if start_point is None: 
         start_point = np.zeros(2) #each line starts at the origin
-    #end_point = torch.rand(2)
     
     seqx = np.linspace(start_point[0], end_point[0], num=seq_len)
     seqy = np.linspace(start_point[1], end_point[1], num=seq_len)
@@ -59,7 +49,6 @@ def sample_data(
     seq_len,
     min_value,
     max_value,
-    num_values,
     noise_var,
     mask_type='int',
     rng=None, scaling = 1.0, 
@@ -78,28 +67,14 @@ def sample_data(
 
     npoints = npoints
     nlines = npoints
-    coords = draw_2dlines(nlines, seq_len, fixedmag=True) #get target lines
+    coords = draw_2dlines(nlines, seq_len) #get target lines
     coords = coords.numpy()
-    #coords = get_circle_points(npoints, mag = 10) # get target coordinates
-    if npoints == 1:
-        i=0
-    else:
-        if min_value == -1:
-            i=2
-        else:
-            i=1
 
     if input_D == 1:
-
         inputs = rand(low=min_value, high=max_value, size=(size, seq_len, 1))
         inputs[:, 1:, 0] = 0 #zeroth input from first position
-        unique_in = np.unique(inputs[:,0,:])
         targets = np.zeros((size, seq_len, 2))
-
-
-        # Get target values. Multiply each addend by its mask and sum over all of them
-        #targets = np.sum(inputs[:, :, 0] * inputs[:, :, 1], axis=1).reshape(-1, 1)
-                
+               
         
         if npoints ==1:
              c = np.where(inputs[:, 0, :])
@@ -117,19 +92,12 @@ def sample_data(
                     c2 = np.where(inputs[:,0,:]==p)
                     targets[c2[0], :] = coords_n[c, :] # +1 becayse min_value is -1 
                     c=c+1
-            
                     
     # scale the inputs
     inputs=inputs.astype(float)
     inputs[:, 0, :] = inputs[:, 0, :].astype(float)*0.1
     if noise_var > 0:
         inputs[:, 1:, :] = inputs[:, 1:, :].astype(float) + rng.randn(size, seq_len-1, input_D)*noise_var
-        ##zeta = rng.randn(size, seq_len)
-        #inputs[:, :, 0] += zeta * np.sqrt(noise_var)
-        #inputs[:, :, 0] = inputs[:, :, 0].clip(min_value, max_value)
-    
-    #print(inputs)
-    #print(targets)
 
     return inputs, targets
 
@@ -142,21 +110,20 @@ def get_mask_labels(dataset):
 
 class BatchGenerator:
     def __init__(
-        self, size=1000, seq_len=10, num_values=2, noise_var=0.0,
-        min_value=0, max_value=1, batch_size=10, offline_data=False,
-        random_state=None, scaling = 1, input_D = 1, npoints = 1, targetD = 2
+        self, size=1000, seq_len=10, noise_var=0.0, min_value=0, max_value=1, 
+        batch_size=10, offline_data=False, random_state=None, scaling=1, 
+        input_D=1, npoints=1, targetD=2
     ):
         self.min_value = min_value
         self.max_value = max_value
         self.batch_size = batch_size
         self.seq_len = seq_len
         self.size = size
-        self.num_values = num_values
         self.noise_var = noise_var
         self.offline_data = offline_data
         self.scaling = scaling
         self.input_D = input_D
-        self.npoints =npoints
+        self.npoints = npoints
         self.targetD = targetD
 
         if random_state is None or isinstance(random_state, int):
@@ -185,8 +152,9 @@ class BatchGenerator:
         inputs, targets = sample_data(
             size=self.batch_size, seq_len=self.seq_len,
             min_value=self.min_value, max_value=self.max_value,
-            noise_var=self.noise_var, num_values=self.num_values,
-            mask_type='int', rng=self.rng, scaling=self.scaling, input_D = self.input_D, npoints = self.npoints, targetD = self.targetD
+            noise_var=self.noise_var, mask_type='int', rng=self.rng, 
+            scaling=self.scaling, input_D = self.input_D, npoints=self.npoints, 
+            targetD=self.targetD
         )
 
         inputs = torch.as_tensor(inputs, dtype=torch.float)
@@ -238,8 +206,8 @@ def load_line_draw(
     batch_size,
     seq_len,
     num_addends,
-    min_addend,
-    max_addend,
+    minval,
+    maxval,
     train_val_split,
     train_noise_var,
     test_noise_var,
@@ -253,6 +221,8 @@ def load_line_draw(
 ):
     N = int(training_size * (1 - train_val_split))
     val_size = training_size - N
+
+    assert input_D == 1, 'Input dimension > 1 requires (new) code implementation'
 
     if random_state is None:
         train_rng = np.random.randint(2**16-1)
@@ -269,19 +239,19 @@ def load_line_draw(
         generator = SoftMaskBatchGenerator
 
     training_data = generator(
-        size=N, seq_len=seq_len, num_values=num_addends,
-        min_value=min_addend, max_value=max_addend, batch_size=batch_size,
-        noise_var=train_noise_var, offline_data=fixdata, random_state=train_rng, scaling = scaling, input_D = input_D, npoints = npoints, targetD = targetD)
+        size=N, seq_len=seq_len, min_value=minval, max_value=maxval, 
+        batch_size=batch_size, noise_var=train_noise_var, offline_data=fixdata, 
+        random_state=train_rng, scaling=scaling, input_D = input_D, npoints=npoints, targetD=targetD)
 
     validation_data = generator(
-        size=val_size, seq_len=seq_len, num_values=num_addends,
-        min_value=min_addend, max_value=max_addend, batch_size=val_size,
-        noise_var=train_noise_var, offline_data=fixdata, random_state=val_rng, scaling = scaling, input_D = input_D, npoints = npoints, targetD = targetD)
+        size=val_size, seq_len=seq_len, min_value=minval, max_value=maxval, 
+        batch_size=val_size, noise_var=train_noise_var, offline_data=fixdata, 
+        random_state=val_rng, scaling=scaling, input_D=input_D, npoints=npoints, targetD=targetD)
 
     test_data = generator(
-        size=test_size, seq_len=seq_len, num_values=num_addends,
-        min_value=min_addend, max_value=max_addend, batch_size=test_size,
-        noise_var=test_noise_var, offline_data=fixdata, random_state=test_rng, scaling = scaling, input_D = input_D, npoints = npoints, targetD = targetD)
+        size=test_size, seq_len=seq_len, min_value=minval, max_value=maxval, 
+        batch_size=test_size, noise_var=test_noise_var, offline_data=fixdata, 
+        random_state=test_rng, scaling=scaling, input_D=input_D, npoints=npoints, targetD=targetD)
 
     if fixdata:
         training_data  = training_data.torch_dataset()

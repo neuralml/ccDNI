@@ -243,11 +243,10 @@ if __name__ == "__main__":
     # Model parameters
     parser.add_argument('--model', type=str, default='LSTM',
                         help='RNN model tu use. One of:'
-                        'subLSTM|fix-subLSTM|LSTM|GRU'
-                        '|TANH|DNI_TANH|DNI_LSTM') #JOP
+                        '|TANH|DNI_TANH|LSTM|DNI_LSTM') #JOP
     parser.add_argument('--nlayers', type=int, default=1,
                         help='number of layers')
-    parser.add_argument('--nhid', type=int, default=50,
+    parser.add_argument('--nhid', type=int, default=30,
                         help='number of hidden units per layer')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='the drop rate for each layer of the network')
@@ -342,6 +341,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
    
+    args.model = 'DNI_LSTM'
+    args.bptt = 3
+    args.epochs = 1
+    args.nseeds = 1
+    args.record_grads = True
+    
     assert args.record_grads, 'In records_grad script, set it to true!'
 
     nhid = args.nhid
@@ -413,6 +418,8 @@ if __name__ == "__main__":
                 savedir = os.path.join(root, savedir) + "/"
                 if not os.path.exists(savedir): 
                     os.makedirs(savedir)
+                    
+                """
                 np.save(savedir + 'hidds.npy', hidds.detach().numpy())
                 np.save(savedir + 'sgrads.npy', sgrads.detach().numpy())
                 np.save(savedir + 'truegrads_output.npy', truegrads_output.detach().numpy())
@@ -425,6 +432,7 @@ if __name__ == "__main__":
 
                 np.save(savedir + 'biases.npy', np.array(biases))
                 np.save(savedir + 'seeds.npy', np.array(seeds))
+                """
 
 
     print("All finished and results saved in", root)

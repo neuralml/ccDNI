@@ -210,7 +210,7 @@ def create_rnn_trainer(model, optimizer, loss_fn, grad_clip=0, reset_hidden=True
         weight = next(model.parameters()).data
         batch_size = engine.state.batch[0].shape[0]
         
-        if model.model_type in ['LSTM', 'DNI_LSTM', 'LANG_LSTM', 'LANG_DNI_LSTM', 'LANG_DNI_TANH', 'cDNI_LSTM', 'cDNI_TANH']:
+        if model.model_type in ['LSTM', 'DNI_LSTM', 'cDNI_LSTM', 'cDNI_TANH']:
             h0 = (Variable(weight.new(nlayers, batch_size, nhid).zero_()),
                     Variable(weight.new(nlayers, batch_size, nhid).zero_()))
         else:
