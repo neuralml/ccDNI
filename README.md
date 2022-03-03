@@ -1,6 +1,6 @@
-# cortico-cerebellar DNI
+# Cerebro-cerebellar RNN
 
-Code used in 'Cortico-cerebellar networks as decoupling neural interfaces', NeurIPS 2021.
+Code used for our paper 'Cerebro-cerebellar networks facilitate learning through feedback decoupling'.
 
 To run linedraw + seqMNIST based tasks, go in /scripts.
 To run image captioning, go into /other/image-captioning.
