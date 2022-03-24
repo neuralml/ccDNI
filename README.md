@@ -11,5 +11,5 @@ Pytorch experiment structured according to https://github.com/miltonllera/pytorc
 
 
 <b>References:</b><br>
-Boven et al. bioRxiv, https://www.biorxiv.org/content/10.1101/2022.01.28.477827v1 <br>
-Pemberton et al NeurIPS 2021, https://proceedings.neurips.cc/paper/2021/hash/3ffebb08d23c609875d7177ee769a3e9-Abstract.html
+Boven, Pemberton et al. bioRxiv, https://www.biorxiv.org/content/10.1101/2022.01.28.477827v1 <br>
+Pemberton, Boven et al NeurIPS 2021, https://proceedings.neurips.cc/paper/2021/hash/3ffebb08d23c609875d7177ee769a3e9-Abstract.html
