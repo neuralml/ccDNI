@@ -10,5 +10,6 @@ Example plotting code is also provided in /plotting.
 Pytorch experiment structured according to https://github.com/miltonllera/pytorch-project-template
 
 <b>References:</b>
+
 Boven et al. bioRxiv, https://www.biorxiv.org/content/10.1101/2022.01.28.477827v1
 Pemberton et al NeurIPS 2021, https://proceedings.neurips.cc/paper/2021/hash/3ffebb08d23c609875d7177ee769a3e9-Abstract.html
