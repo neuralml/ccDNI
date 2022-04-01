@@ -252,7 +252,7 @@ def train_model(
 
 
 ##############################################################################
-# PARSE THE INPUT PARAMETERS and help/usage
+# PARSE THE INPUT PARAMETERS and usage specifications
 ##############################################################################
     
 
