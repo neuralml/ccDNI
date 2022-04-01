@@ -46,7 +46,7 @@ For the seqmnist-based drawing tasks:
 
 
 Pytorch experiment structured according to https://github.com/miltonllera/pytorch-project-template <br>
-The DNI implementation is based on github.com/koz4k/dni-pytorch 
+The DNI implementation is based on https://github.com/koz4k/dni-pytorch 
 
 
 <b>References:</b><br>
