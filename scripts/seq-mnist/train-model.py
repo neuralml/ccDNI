@@ -51,7 +51,9 @@ def train_model(
     # Set training seed and get device
     device = set_seed_and_device(seed, no_cuda)
 
+    ###############################################################################
     # Load training data
+    ###############################################################################
     train_data, validation_data, test_data = load_mnist(
         data_path, input_size, batch_size, 
         shuffle=shuffle, download=download
@@ -64,7 +66,9 @@ def train_model(
         name_helper += 'dni'
     save = save.replace('filler', name_helper)
    
-    # Initialise model
+    ###############################################################################
+    # Build the model
+    ###############################################################################
     model_type = model
     model = init_model(
         model_type=model,
@@ -112,7 +116,9 @@ def train_model(
     if record_certainty:
         metric_types.append('certainty')    
 
-    # Set up the training regime
+    ###############################################################################
+    # Setup training regime 
+    ###############################################################################
     setup = setup_training(
         model, validation_data, optim, metric_types, lr, l2_norm,
         rate_reg, clip, early_stopping, decay_lr, lr_scale, lr_decay_patience,
@@ -130,7 +136,9 @@ def train_model(
             len(train_data), log_interval
         )
 
-    # Run training
+    ###############################################################################
+    # Train the model
+    ###############################################################################
     test_metrics = run_training(
         model=model,
         train_data=train_data,
@@ -145,7 +153,9 @@ def train_model(
     if record_grads:
         test_metrics, grads = test_metrics
         
-    # Testing preformance
+    ###############################################################################
+    # Test the model performance
+    ###############################################################################
     test_acc = test_metrics['acc']
     test_NLL = test_metrics['xent']
 
@@ -156,6 +166,10 @@ def train_model(
         test_NLL)))
 
     print('Saving results....')
+    
+    ###############################################################################
+    # Save model
+    ###############################################################################
 
     # Save traces
     training_tracer.save(save)
