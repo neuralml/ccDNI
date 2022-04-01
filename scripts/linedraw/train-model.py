@@ -26,7 +26,9 @@ from os.path import isfile, join
 import math
 
 
-##Set path
+###############################################################################
+# Set path to src folder 
+###############################################################################
 
 src_path = 'TOFILL'#path to src directory
 sys.path.insert(0, src_path)
@@ -250,7 +252,7 @@ def train_model(
 
 
 ##############################################################################
-# PARSE THE INPUT
+# PARSE THE INPUT PARAMETERS
 ##############################################################################
     
 
@@ -262,7 +264,7 @@ if __name__ == "__main__":
     # Model parameters
     parser.add_argument('--model', type=str, default='LSTM',
                         help='RNN model to use. One of:'
-                             '|TANH|DNI_TANH|LSTM|DNI_LSTM')
+                             '|TANH|DNI_TANH|LSTM|DNI_LSTM') #LSTM is equivalent to cerebral RNN and DNI_LSTM is equivalent to cerebro-cerebellar RNN
     parser.add_argument('--nlayers', type=int, default=1,
                         help='number of layers')
     parser.add_argument('--nhid', type=int, default=50,
@@ -292,6 +294,12 @@ if __name__ == "__main__":
                         help='proportion of trainig data used for validation')
     parser.add_argument('--fixdata', action='store_true',
                         help='flag to keep the data fixed across each epoch')
+    parser.add_argument('--input-D', type=int, default=1,
+                    help='input dimension') 
+    parser.add_argument('--targetD', type=int, default=2,
+                    help='target dimension') # for now coded that target dimennsion = input_D 
+    parser.add_argument('--npoints', type=int, default=7,
+                    help='npoints') 
 
     # Training parameters
     parser.add_argument('--epochs', type=int, default=100,
@@ -346,34 +354,29 @@ if __name__ == "__main__":
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='report interval')
 
-    # JOP
+    # ccRNN parameters
     parser.add_argument('--bptt', type=int, metavar='N',
-                        help='truncation size')
+                        help='size of feedback horizon as specified by backpropagation through time (bptt)')
     parser.add_argument('--nfibres', type=int, default=-1, metavar='N',
-                        help='Number of non-zero weights from hidden to synthesiser (like mossy fibres)')
+                        help='Number of non-zero weights (mossy fibre input) from cortical RNN to cerebellar feedforward network')
     parser.add_argument('--record-grads', action='store_true',
                         help='Record hidden activity and corresponding true/synthetic gradients')
     parser.add_argument('--synth-nlayers', type=int, default=2,
-                        help='Number of hidden layers for synthesiser')
+                        help='Number of hidden layers for cerebellar feedforward network model')
     parser.add_argument('--synth-nhid', type=int, metavar='N', default=400, 
-                        help='Number of hidden units in synthesiser')
-    parser.add_argument('--input-D', type=int, default=1,
-                    help='input dimension') 
-    parser.add_argument('--targetD', type=int, default=2,
-                    help='target dimension') # for now coded that target dimennsion = input_D 
-    parser.add_argument('--npoints', type=int, default=7,
-                    help='npoints') 
+                        help='Number of hidden units in cerebellar feedforward network model')
+
   
     parser.add_argument('--spars_int', type=int, default=None,
-                    help='sparse int')
+                    help='defines the temporal sparseness of the external feedback to the RNN')
     parser.add_argument('--ablation_epoch', type=int, default=-1, metavar='N',
-                        help='when to ablate the synthesiser')
+                        help='when to ablate the cerebellar feedforward network model')
     parser.add_argument('--synth_ablation_epoch', type=int, default=-1, metavar='N',
-                        help='when to ablate the synthesiser learning (IO)')
+                        help='when to ablate the learning in cerebellar feedforward network model (like inferior olive (IO) )')
 
     args = parser.parse_args()
     
-    #args.model = 'DNI_LSTM' apply dni/'cerebellum'?
+    #args.model = 'DNI_LSTM' 
     args.epochs = 100
     
     #as in paper
@@ -397,11 +400,15 @@ if __name__ == "__main__":
     ###############################################################################
     # Run the model according to train_model
     ###############################################################################
+
+    # Specify the different initialisation of the network (seeds)
     seeds = [1, 2, 1243, 34521, 135235, 236236, 7, 12, 1115, 987][:args.nseeds] 
-    
-    all_scores = np.zeros((len(seeds), 2, args.epochs))  # 3 for training_mse, validation_mse
+
+    # Create empty matrices to save model results
+    all_scores = np.zeros((len(seeds), 2, args.epochs)) 
     pred_all = np.zeros((len(seeds), int(args.npoints), args.seqlen, args.targetD))
 
+    # Loop over seeds
     for i, s in enumerate(seeds):
         print("Seed number:", s)
         args.seed = s
@@ -409,6 +416,7 @@ if __name__ == "__main__":
 
 
         if not args.record_grads:
+            #run training with parsed input
             train_mse, val_mse, train_data, test_data, model, trainer = train_model(**vars(args))
         else:
             print('Code not set up for recording gradients')
