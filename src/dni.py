@@ -14,7 +14,7 @@ class UnidirectionalInterface(torch.nn.Module):
     Can be used to manually pass `messages` with methods `send` and `receive`.
 
     Args:
-        synthesizer: `Synthesizer` to use to generate `messages`.
+        synthesizer: `Synthesizer` to use to generate `messages`. Equivalent to the cerebellar feedforward network.
     """
 
     def __init__(self, synthesizer):
@@ -68,7 +68,7 @@ class ForwardInterface(UnidirectionalInterface):
     `BidirectionalInterface`.
 
     Args:
-        synthesizer: `Synthesizer` to use to generate `messages`.
+        synthesizer: `Synthesizer` to use to generate `messages`. Equivalent to the cerebellar feedforward network
     """
 
     def forward(self, message, trigger):
@@ -98,12 +98,12 @@ class ForwardInterface(UnidirectionalInterface):
 
 
 class BackwardInterface(UnidirectionalInterface):
-    """`Interface` for synthesizing gradients in the backward pass.
+    """`Interface` for synthesizing gradients (predicting feedback) in the backward pass.
 
     Can be used to achieve an update unlock.
 
     Args:
-        synthesizer: `Synthesizer` to use to generate gradients.
+        synthesizer: `Synthesizer` to use to generate gradients. Equivalent to the cerebellar feedforward network
     """
 
     def forward(self, trigger):
