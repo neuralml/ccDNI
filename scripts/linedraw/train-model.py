@@ -62,8 +62,10 @@ def train_model(
     # Set training seed and get device
     device = set_seed_and_device(seed, no_cuda)
 
-
+    ###############################################################################
     # Load training data
+    ###############################################################################
+
     train_data, test_data, validation_data = load_line_draw(
         training_size=training_size,
         test_size=testing_size,
@@ -86,7 +88,10 @@ def train_model(
     if bptt is None:
         bptt = seqlen
 
-    # Initialise model
+    ###############################################################################
+    # Build the model
+    ###############################################################################
+
     input_size, hidden_size, n_responses, model_type = input_D, nhid, targetD, model
     
     model = init_model(
@@ -129,7 +134,10 @@ def train_model(
     if bptt is None:
         bptt = seqlen
 
-    # Set up the training regime
+    ###############################################################################
+    # Setup training regime 
+    ###############################################################################
+
     setup = setup_training(
         model, validation_data, optim, ['mse'], lr, l2_norm,
         rate_reg, clip, early_stopping, decay_lr, lr_scale, lr_decay_patience,
@@ -147,7 +155,10 @@ def train_model(
         )
         
 
-    # Run training
+    ###############################################################################
+    # Training the model
+    ###############################################################################
+
     test_metrics = run_training(
         model=model,
         train_data=train_data,
@@ -161,6 +172,10 @@ def train_model(
 
     if record_grads:
         test_metrics, grads = test_metrics
+    
+    ###############################################################################
+    # Test the model performance
+    ###############################################################################
         
     test_mse = test_metrics['mse']
 
@@ -169,6 +184,11 @@ def train_model(
 
     print('Saving results....')
 
+
+    ###############################################################################
+    # Save model
+    ###############################################################################
+        
     # Save traces
 #    training_tracer.save(save)
 #    validation_tracer.save(save)
@@ -374,8 +394,10 @@ if __name__ == "__main__":
     
     
                 
-                    #################TEST MODELS AND PLOT RESULTS###############
-    seeds = [1, 2, 1243, 34521, 135235, 236236, 7, 12, 1115, 987][:args.nseeds]
+    ###############################################################################
+    # Run the model according to train_model
+    ###############################################################################
+    seeds = [1, 2, 1243, 34521, 135235, 236236, 7, 12, 1115, 987][:args.nseeds] 
     
     all_scores = np.zeros((len(seeds), 2, args.epochs))  # 3 for training_mse, validation_mse
     pred_all = np.zeros((len(seeds), int(args.npoints), args.seqlen, args.targetD))
@@ -395,7 +417,7 @@ if __name__ == "__main__":
         all_scores[i, 0, :] = train_mse 
         all_scores[i, 1, :] = val_mse
         
-        #get input data for one seed
+        #loop to get model output traces unique to the training examples
         if i==0:
             data, target = next(iter(test_data))
             if torch.cuda.is_available():
@@ -425,7 +447,10 @@ if __name__ == "__main__":
 
         print("Time elapsed =", elapsed)
             
-    
+    ###############################################################################
+    # Save model output
+    ###############################################################################
+
     def create_dir(path, folder):
         
         
