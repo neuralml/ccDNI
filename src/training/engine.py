@@ -63,7 +63,8 @@ def create_rnn_trainer(model, optimizer, loss_fn, grad_clip=0, reset_hidden=True
 
     record_grads_orig = record_grads
 
-    opt_each_trunc = False #opt each truncation or only at end of batch (latter avoids possibly unfair larger # updates for dni)
+    opt_each_trunc = False #optimize the model each truncation (TRUE) or only at end of batch (FALSE) (latter avoids possibly unfair larger # updates for dni)
+	
     def _training_loop(engine, batch):
         # Set model to training and zero the gradients  
         model.train()
@@ -77,15 +78,17 @@ def create_rnn_trainer(model, optimizer, loss_fn, grad_clip=0, reset_hidden=True
         else:   
             record_grads = record_grads_orig
         
-        # Load the batches
+        # Load the input-targetbatches
         inputs, targets = prepare_batch(batch, device=device, non_blocking=non_blocking)
+	
         hidden = engine.state.hidden
         
         seq_len = inputs.shape[1]
-        ntrunc = (seq_len - 1) // bptt + 1 #number of BPTT truncations within sequence
+        ntrunc = (seq_len - 1) // bptt + 1 #number of feedback horizon (bptt) truncations within sequence
         total_loss = 0 
-        sparse = not (spars_int is None) #sparse feedback?
-
+        sparse = not (spars_int is None) #specify if sparse temporal feedback is given or not 
+	
+	#loop over input in truncations as specified by the feedback horizon (bptt)
         for i in range(0, ntrunc):
             model.train()
             inputs_trunc = inputs[:,i*bptt:(i+1)*bptt]
@@ -97,7 +100,7 @@ def create_rnn_trainer(model, optimizer, loss_fn, grad_clip=0, reset_hidden=True
             # If we didn't, the model would try backpropagating all the way to start of the batch.
             detached_hidden = _detach_hidden_state(hidden)             
             
-	    #record activities/gradients (e.g. to compare activity correlations/gradient cosimilarity)
+	    #record unit activities and gradients (e.g. to compare activity correlations/gradient cosimilarity)
             if record_grads:
                 if model.model_type in ['DNI_TANH', 'cDNI_TANH']:
                     hidden.requires_grad_()
@@ -126,13 +129,17 @@ def create_rnn_trainer(model, optimizer, loss_fn, grad_clip=0, reset_hidden=True
                 if record_grads:
                     if not sparse or i < ntrunc - 1: 
                         recordgrads(hidden, detached_hidden, contexts)
-                
-                #if pred_last then loss is only defined on the last truncation
+			
+                ########################################################################################
+		# Implement sparse temporal feedback
+		########################################################################################
+		
+                #if pred_last then feedback is only given after processing last truncation where loss will be defined
                 if pred_last and i == ntrunc - 1:
                    loss = loss_fn((pred, new_hidden), targets)
                    dni.backward(loss)
                    total_loss = loss.item()          
-                elif not pred_last:
+                elif not pred_last: #if not pred_last then feedback is given sparsely throughout the sequence as defined by spars_int
                     if sparse:
 			#some magic to work out which timesteps training targets are provided 
                         tstart = i * bptt 
@@ -176,7 +183,9 @@ def create_rnn_trainer(model, optimizer, loss_fn, grad_clip=0, reset_hidden=True
             else:
                 hidden = new_hidden      
         
-	#finally update model params
+	########################################################################################
+	# Update model parameters
+	########################################################################################
         if not opt_each_trunc:
             if grad_clip > 0:
                 nn.utils.clip_grad_norm_(model.parameters(), grad_clip) 
@@ -218,7 +227,7 @@ def create_rnn_trainer(model, optimizer, loss_fn, grad_clip=0, reset_hidden=True
         
         engine.state.hidden = h0
        
-    #target gradient for synthesiser (*not* true gradient, see neurips2021 paper or jaderberg et al)
+    #target gradient for cerebellar feedfoward network (*not* true gradient, see neurips2021 paper or jaderberg et al)
     def record_tgrad(grad):
         engine.state.tgrads.append(grad)
     def record_tgrad_output(grad): #LSTM output state
