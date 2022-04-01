@@ -7,7 +7,8 @@ Beyond the standard python libraries, you will need [Pytorch](https://pytorch.or
 
 ## Steps to run 
 For the **linedraw** and **seqmnist**-based tasks:
-1. Go into the /scripts folder and choose the corresponding folder. Go to the *train-model.py* file. 
+1. Go into the /scripts folder and choose the corresponding folder according to the experiment you want to run. <br>
+Open the *train-model.py* file. 
 2. In the file, manually define the path to the src folder (e.g. Documents/ccDNI/src) and where to save results (e.g. Documents/ccDNI/results) for your system. These are defined in the *src_path* and *root* variables respectively. 
 3. *To run within IDE*:
    * Select the hyperparameters of the experiment (see main ones below). E.g. to run the ccRNN model for 5 epochs set args.model = 'DNI_LSTM' and args.epochs = 5
