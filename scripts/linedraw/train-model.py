@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 25 11:53:52 2021
-
-@author: ellenboven
-"""
+'''
+Linedrawing task. Given an input stimulus predict (x_t, y_t) coordinates for drawing.
+'''
 
 
 import sys
@@ -30,7 +28,7 @@ import math
 # Set path to src folder 
 ###############################################################################
 
-src_path = 'TOFILL'#path to src directory
+src_path = 'INSERT PARTH HERE'#path to src directory
 sys.path.insert(0, src_path)
 
 
