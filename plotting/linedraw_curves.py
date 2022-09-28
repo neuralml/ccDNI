@@ -36,7 +36,7 @@ colours =[(0.5,0.5,0.5),(249/256, 170/256, 56/256), (91/256, 206/256, 173/256)]
 # Function to load data 
 # =============================================================================
 def import_scores(data_path, date_results, vecname, bptt, nhid, models, synth_nhid):
-    if models in ['cRNN]:
+    if models in ['cRNN']:
         model ='LSTM'
         vecname =  model + "_" + vecname 
         mypath = join(datapath, date_results)
