@@ -1,6 +1,6 @@
 # Cerebro-cerebellar RNN
 
-Code used for paper [Cerebro-cerebellar networks facilitate learning through feedback decoupling](https://www.biorxiv.org/content/10.1101/2022.01.28.477827v1.abstract) (see also [Cortico-cerebellar networks as decoupling neural interfaces](https://proceedings.neurips.cc/paper/2021/hash/3ffebb08d23c609875d7177ee769a3e9-Abstract.html)).
+Code used for paper [Cerebro-cerebellar networks facilitate learning through feedback decoupling](https://www.nature.com/articles/s41467-022-35658-8) (see also [Cortico-cerebellar networks as decoupling neural interfaces](https://proceedings.neurips.cc/paper/2021/hash/3ffebb08d23c609875d7177ee769a3e9-Abstract.html)).
 
 ## Dependencies
 Beyond the standard python libraries, you will need [Pytorch](https://pytorch.org/) (we use version 1.6.0, but later should work) to define the neural network models and as well as [ignite](https://github.com/pytorch/ignite) (we use version 0.2.1) which wraps the training regime. 
